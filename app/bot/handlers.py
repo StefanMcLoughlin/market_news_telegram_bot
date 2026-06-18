@@ -3,6 +3,19 @@ from telegram.ext import ContextTypes
 from app.services.news_service import fetch_top_headlines
 
 
+def format_sentiment(sentiment: float | None) -> str:
+    if sentiment is None:
+        return "Unknown"
+    
+    if sentiment > 0.1:
+        return "Bullish"
+    
+    if sentiment < -0.1:
+        return "Bearish"
+    
+    return "Neutral"
+
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Willkommen beim Market News Bot\n\n"
@@ -33,10 +46,16 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             title = article.get("title") or "No title"
             source = article.get("source") or "Unknown source"
             url = article.get("url") or "No URL"
+            relevance = article.get("relevance")
+            sentiment = format_sentiment(article.get("sentiment"))
+
+            relevance_text = f"{relevance}/10" if relevance is not None else "Unknown"
 
             message += (
                 f"{index}. {title}\n"
                 f"Source: {source}\n"
+                f"Relevance: {relevance_text}\n"
+                f"Sentiment: {sentiment}\n"
                 f"Link: {url}\n\n"
             )
 
