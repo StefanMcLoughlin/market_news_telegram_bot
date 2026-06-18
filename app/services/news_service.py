@@ -106,7 +106,7 @@ BLOCKED_SOURCES = [
 ]
 
 MIN_RELEVANCE_PREFERRED_SOURCE = 4
-MIN_RELEVANCE_UNKNOWN_SOURCE = 6
+MIN_RELEVANCE_UNKNOWN_SOURCE = 5
 
 
 def get_article_text(article: dict) -> str:
@@ -186,7 +186,6 @@ def fetch_top_headlines(limit: int = 5, keyword: str |None = None):
         "articlesSortByAsc": False,
         "resultType": "articles",
         "dataType": ["news"],
-       # "forceMaxDataTimeWindow": 31,
     }
 
     response = requests.post(NEWS_API_URL, json=payload, timeout=10)
@@ -214,3 +213,33 @@ def fetch_top_headlines(limit: int = 5, keyword: str |None = None):
             }
         )
     return cleaned_articles
+
+def fetch_news_by_keywords(keywords: list[str], limit_per_keyword: int = 20) -> list[dict]:
+    all_articles = []
+    seen_urls = set()
+
+    for keyword in keywords:
+
+        articles = fetch_top_headlines(
+            limit=limit_per_keyword,
+            keyword=keyword,
+        )
+
+        for article in articles:
+            url = article.get("url")
+
+            if not url or url in seen_urls:
+                continue
+
+            seen_urls.add(url)
+            all_articles.append(article)
+
+    all_articles.sort(
+        key=lambda article: (
+            article.get("is_preferred_source", False),
+            article.get("relevance") or 0,
+        ),
+        reverse=True,
+    )
+
+    return all_articles

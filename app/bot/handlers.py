@@ -1,17 +1,17 @@
 from telegram import Update
 from telegram.ext import ContextTypes
-from app.services.news_service import fetch_top_headlines
+from app.services.news_service import fetch_top_headlines, fetch_news_by_keywords
 
 
 NEWS_CATEGORIES = {
-    "crypto": "bitcoin",
-    "macro": "federal reserve",
-    "stocks": "stock market",
-    "gold": "gold",
+    "crypto": ["bitcoin", "ethereum", "crypto market"],
+    "macro": ["federal reserve", "inflation", "interest rates"],
+    "stocks": ["stock market", "nasdaq", "earnings"],
+    "gold": ["gold price", "safe haven", "dollar yields"],
 }
 
 
-def get_news_category(context: ContextTypes.DEFAULT_TYPE) -> tuple[str, str | None]:
+def get_news_category(context: ContextTypes.DEFAULT_TYPE) -> tuple[str, list[str] | None]:
     if not context.args:
         return "general", None
     
@@ -59,7 +59,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        category, keyword = get_news_category(context)
+        category, keywords = get_news_category(context)
 
         if category == "unknown":
             await update.message.reply_text(
@@ -72,7 +72,13 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         
-        articles = fetch_top_headlines(limit=50, keyword=keyword)
+        if keywords is None:
+            articles = fetch_top_headlines(limit=50)
+        else:
+            articles = fetch_news_by_keywords(
+                keywords=keywords,
+                limit_per_keyword=50,
+            )
         if not articles:
             await update.message.reply_text(
                 "Aktuell wurden keine passenden Markt-News gefunden."
