@@ -49,7 +49,11 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             relevance = article.get("relevance")
             sentiment = format_sentiment(article.get("sentiment"))
 
-            relevance_text = f"{relevance}/10" if relevance is not None else "Unknown"
+            if relevance is not None:
+                display_relevance = min(relevance, 10)
+                relevance_text = f"{display_relevance}/10"
+            else:
+                relevance_text = "Unknown"
 
             message += (
                 f"{index}. {title}\n"

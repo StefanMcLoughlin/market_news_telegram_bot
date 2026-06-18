@@ -59,7 +59,7 @@ MIN_RELEVANCE = 5
 def get_article_text(article: dict) -> str:
     title = article.get("title") or ""
     body = article.get("body") or ""
-    source = article.get("source", {}.get("title") or "")
+    source = article.get("source", {}).get("title") or ""
 
     return f"{title} {body} {source}".lower()
 
@@ -92,6 +92,7 @@ def fetch_top_headlines(limit: int = 5):
         raise ValueError("NEWS_API_KEY is missing. Please check your .env file.")
     
     payload = {
+        "action": "getArticles",
         "apiKey": NEWS_API_KEY,
         "keyword": NEWS_KEYWORD,
         "lang": NEWS_LANGUAGE,
@@ -110,6 +111,9 @@ def fetch_top_headlines(limit: int = 5):
     data = response.json()
     articles = data.get("articles", {}).get("results", [])
     filtered_articles = filter_articles(articles)
+    filtered_articles.sort(
+        key=lambda article: article.get("relevance") or 0, reverse=True,
+    )
 
     cleaned_articles = []
 
