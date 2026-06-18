@@ -169,14 +169,16 @@ def filter_articles(articles: list[dict]) -> list[dict]:
     return [article for article in articles if is_relevant_article(article)]
 
 
-def fetch_top_headlines(limit: int = 5):
+def fetch_top_headlines(limit: int = 5, keyword: str |None = None):
     if not NEWS_API_KEY:
         raise ValueError("NEWS_API_KEY is missing. Please check your .env file.")
+    
+    search_keyword = keyword or NEWS_KEYWORD
     
     payload = {
         "action": "getArticles",
         "apiKey": NEWS_API_KEY,
-        "keyword": NEWS_KEYWORD,
+        "keyword": search_keyword,
         "lang": NEWS_LANGUAGE,
         "articlesPage": 1,
         "articlesCount": limit,
