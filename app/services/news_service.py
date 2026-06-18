@@ -210,6 +210,9 @@ def fetch_top_headlines(limit: int = 5, keyword: str |None = None):
             "sentiment": article.get("sentiment"),
             "relevance": article.get("relevance"),
             "is_preferred_source": is_preferred_source(article),
+            "summary": None,
+            "market_impact": None,
+            "key_points": [],
             }
         )
     return cleaned_articles
