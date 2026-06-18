@@ -40,6 +40,7 @@ IMPORTANT_KEYWORDS = [
 
 BLOCKED_KEYWORDS = [
     "presale",
+    "crypto presale",
     "airdrop",
     "giveaway",
     "sponsored",
@@ -52,6 +53,24 @@ BLOCKED_KEYWORDS = [
     "meme coin",
     "memecoin",
     "price prediction",
+    "price forecast",
+    "best crypto to buy",
+    "next 100x",
+    "100x",
+    "1000x",
+    "moon",
+    "altcoin gem",
+    "hidden gem",
+    "buy now",
+    "top crypto",
+    "token sale",
+    "ico",
+    "ido",
+    "penny stock",
+    "stock to buy",
+    "stocks to buy",
+    "millionaire",
+    "dangerous assumption",
 ]
 
 PREFERRED_SOURCES = [
@@ -67,17 +86,27 @@ PREFERRED_SOURCES = [
     "Crypto Briefing",
     "The Block",
     "Decrypt",
+    "CNN",
 ]
 
 BLOCKED_SOURCES = [
     "Paperblog",
-    "Coinpedia - Fintech & Cryptocurreny News Media| Crypto Guide",
+    "Coinpedia",
     "CoinGape",
     "The Cryptonomist",
-    "Pluang.com",
+    "Pluang",
+    "Coindoo",
+    "U.Today",
+    "CryptoPotato",
+    "BeInCrypto",
+    "Watcher Guru",
+    "Bitcoinist",
+    "Seeking Alpha",
+    "NDTV Gadgets 360",
 ]
 
-MIN_RELEVANCE = 5
+MIN_RELEVANCE_PREFERRED_SOURCE = 4
+MIN_RELEVANCE_UNKNOWN_SOURCE = 6
 
 
 def get_article_text(article: dict) -> str:
@@ -120,10 +149,14 @@ def is_relevant_article(article: dict) -> bool:
     if has_blocked_keyword:
         return False
     
-    relevance = article.get("relevance")
+    relevance = article.get("relevance") or 0
 
-    if relevance is not None and relevance < MIN_RELEVANCE:
-        return False
+    if is_preferred_source(article):
+        if relevance < MIN_RELEVANCE_PREFERRED_SOURCE:
+            return False
+    else:
+        if relevance < MIN_RELEVANCE_UNKNOWN_SOURCE:
+            return False
     
     has_important_keyword = any(
         keyword in article_text for keyword in IMPORTANT_KEYWORDS
@@ -133,7 +166,7 @@ def is_relevant_article(article: dict) -> bool:
 
 
 def filter_articles(articles: list[dict]) -> list[dict]:
-    return[article for article in articles if is_relevant_article(article)]
+    return [article for article in articles if is_relevant_article(article)]
 
 
 def fetch_top_headlines(limit: int = 5):
@@ -151,7 +184,7 @@ def fetch_top_headlines(limit: int = 5):
         "articlesSortByAsc": False,
         "resultType": "articles",
         "dataType": ["news"],
-        "forceMaxDataTimeWindow": 31,
+       # "forceMaxDataTimeWindow": 31,
     }
 
     response = requests.post(NEWS_API_URL, json=payload, timeout=10)
@@ -170,7 +203,7 @@ def fetch_top_headlines(limit: int = 5):
         cleaned_articles.append(
             {
             "title": article.get("title"),
-            "source": article.get("source", {}).get("title"),
+            "source": get_article_source(article),
             "url": article.get("url"),
             "published_at": article.get("dateTime"),
             "sentiment": article.get("sentiment"),
