@@ -59,7 +59,7 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"Link: {url}\n\n"
             )
 
-        await update.message.reply_text(message)
+        await update.message.reply_text(message, disable_web_page_preview=True)
 
     except Exception as error:
         print(f"Error while fetching news: {error}")
