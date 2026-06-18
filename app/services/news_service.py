@@ -54,6 +54,8 @@ BLOCKED_KEYWORDS = [
     "price prediction",
 ]
 
+MIN_RELEVANCE = 5
+
 def get_article_text(article: dict) -> str:
     title = article.get("title") or ""
     body = article.get("body") or ""
@@ -68,6 +70,11 @@ def is_relevant_article(article: dict) -> bool:
         keyword in article_text for keyword in BLOCKED_KEYWORDS
     )
     if has_blocked_keyword:
+        return False
+    
+    relevance = article.get("relevance")
+
+    if relevance is not None and relevance < MIN_RELEVANCE:
         return False
     
     has_important_keyword = any(
