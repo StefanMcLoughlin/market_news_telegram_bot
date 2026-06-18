@@ -54,7 +54,31 @@ BLOCKED_KEYWORDS = [
     "price prediction",
 ]
 
+PREFERRED_SOURCES = [
+    "Reuters",
+    "Bloomberg",
+    "CNBC",
+    "MarketWatch",
+    "Financial Times",
+    "The Wall Street Journal",
+    "Investing.com",
+    "Yahoo Finance",
+    "CoinDesk",
+    "Crypto Briefing",
+    "The Block",
+    "Decrypt",
+]
+
+BLOCKED_SOURCES = [
+    "Paperblog",
+    "Coinpedia - Fintech & Cryptocurreny News Media| Crypto Guide",
+    "CoinGape",
+    "The Cryptonomist",
+    "Pluang.com",
+]
+
 MIN_RELEVANCE = 5
+
 
 def get_article_text(article: dict) -> str:
     title = article.get("title") or ""
@@ -63,7 +87,31 @@ def get_article_text(article: dict) -> str:
 
     return f"{title} {body} {source}".lower()
 
+
+def get_article_source(article: dict) -> str:
+    return article.get("source", {}).get("title") or ""
+
+
+def is_blocked_source(article: dict) -> bool:
+    source = get_article_source(article).lower()
+
+    return any(
+        blocked_source.lower() in source for blocked_source in BLOCKED_SOURCES
+    )
+
+
+def is_preferred_source(article: dict) -> bool:
+    source = get_article_source(article).lower()
+
+    return any(
+        preferred_source.lower() in source for preferred_source in PREFERRED_SOURCES
+    )
+
+
 def is_relevant_article(article: dict) -> bool:
+    if is_blocked_source(article):
+        return False
+    
     article_text = get_article_text(article)
 
     has_blocked_keyword = any(
@@ -82,6 +130,7 @@ def is_relevant_article(article: dict) -> bool:
     )
 
     return has_important_keyword
+
 
 def filter_articles(articles: list[dict]) -> list[dict]:
     return[article for article in articles if is_relevant_article(article)]
@@ -112,7 +161,7 @@ def fetch_top_headlines(limit: int = 5):
     articles = data.get("articles", {}).get("results", [])
     filtered_articles = filter_articles(articles)
     filtered_articles.sort(
-        key=lambda article: article.get("relevance") or 0, reverse=True,
+        key=lambda article: (is_preferred_source(article), article.get("relevance") or 0,), reverse=True,
     )
 
     cleaned_articles = []
@@ -126,6 +175,7 @@ def fetch_top_headlines(limit: int = 5):
             "published_at": article.get("dateTime"),
             "sentiment": article.get("sentiment"),
             "relevance": article.get("relevance"),
+            "is_preferred_source": is_preferred_source(article),
             }
         )
     return cleaned_articles
