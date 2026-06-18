@@ -1,7 +1,7 @@
 from telegram.ext import ApplicationBuilder, CommandHandler
 
 from app.config import TELEGRAM_BOT_TOKEN
-from app.bot.handlers import start_command, help_command
+from app.bot.handlers import start_command, help_command, news_command
 
 
 def main():
@@ -12,6 +12,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("news", news_command))
 
     print("Bot is running...")
     app.run_polling()

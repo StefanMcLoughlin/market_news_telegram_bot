@@ -15,3 +15,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/help - Zeigt diese Hilfe.\n"
         "/news - Zeigt aktuelle Markt-News."
     )
+
+async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "News-Funktion ist vorbereitet. Im nächsten Schritt werden echte Markt-News geladen."
+    )
