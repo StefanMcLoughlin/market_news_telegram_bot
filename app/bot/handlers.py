@@ -1,6 +1,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 from app.services.news_service import fetch_top_headlines, fetch_news_by_keywords
+from app.services.ai_service import analyze_article
 
 
 NEWS_CATEGORIES = {
@@ -23,6 +24,10 @@ def get_news_category(context: ContextTypes.DEFAULT_TYPE) -> tuple[str, list[str
     return category, NEWS_CATEGORIES[category]
 
 
+def should_use_ai(context: ContextTypes.DEFAULT_TYPE) -> bool:
+    return len(context.args) > 1 and context.args[1].lower() == "ai"
+
+
 def format_sentiment(sentiment: float | None) -> str:
     if sentiment is None:
         return "Unknown"
@@ -34,6 +39,40 @@ def format_sentiment(sentiment: float | None) -> str:
         return "Bearish"
     
     return "Neutral"
+
+
+def format_ai_article(article: dict) -> str:
+    title = article.get("title") or "No title"
+    source = article.get("source") or "Unknown source"
+    url = article.get("url") or "No URL"
+    relevance = article.get("relevance")
+    sentiment = format_sentiment(article.get("sentiment"))
+    summary = article.get("summary") or "No summary available"
+    market_impact = article.get("market_impact") or "No market impact available"
+    key_points = article.get("key_points") or []
+
+    relevance_text = f"{min(relevance, 10)}/10" if relevance is not None else "Unknown"
+
+    message = (
+        "AI Market News Analysis:\n\n"
+        f"Title: {title}\n"
+        f"Source: {source}\n"
+        f"Relevance: {relevance_text}\n"
+        f"Sentiment: {sentiment}\n\n"
+        f"Summary: {summary}\n\n"
+        f"Market Impact:\n{market_impact}\n\n"
+    )
+
+    if key_points:
+        message += "Key Points:\n"
+        for point in key_points:
+            message += f"- {point}\n"
+
+        message += "\n"
+
+    message += f"Link: {url}"
+
+    return message
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -53,7 +92,8 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/news crypto - Zeigt Crypto-News.\n"
         "/news macro - Zeigt Makro-News.\n"
         "/news stocks - Zeigt Aktienmarkt-News.\n"
-        "/news gold - Zeigt Gold-/Dollar-News."
+        "/news gold - Zeigt Gold-/Dollar-News.\n"
+        "/news crypto ai - Analysiert die wichtigste Crypto-News mit AI."
     )
 
 
@@ -82,6 +122,16 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not articles:
             await update.message.reply_text(
                 "Aktuell wurden keine passenden Markt-News gefunden."
+            )
+            return
+        
+        if should_use_ai(context):
+            analyzed_article = analyze_article(articles[0])
+            message = format_ai_article(analyzed_article)
+
+            await update.message.reply_text(
+                message,
+                disable_web_page_preview=True,
             )
             return
     

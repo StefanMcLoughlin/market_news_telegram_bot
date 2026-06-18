@@ -1,5 +1,5 @@
 def analyze_article(article: dict) -> dict:
-    return{
+    return {
         **article,
         "summary": "AI summary placeholder",
         "market_impact": "Market impact placeholder",
