@@ -1,7 +1,9 @@
 from telegram import Update
 from telegram.ext import ContextTypes
+
 from app.services.news_service import fetch_top_headlines, fetch_news_by_keywords
 from app.services.ai_service import analyze_article
+from app.bot.formatters import format_ai_article, format_sentiment
 
 
 NEWS_CATEGORIES = {
@@ -26,62 +28,6 @@ def get_news_category(context: ContextTypes.DEFAULT_TYPE) -> tuple[str, list[str
 
 def should_use_ai(context: ContextTypes.DEFAULT_TYPE) -> bool:
     return len(context.args) > 1 and context.args[1].lower() == "ai"
-
-
-def format_sentiment(sentiment: float | None) -> str:
-    if sentiment is None:
-        return "Unknown"
-    
-    if sentiment > 0.1:
-        return "Bullish"
-    
-    if sentiment < -0.1:
-        return "Bearish"
-    
-    return "Neutral"
-
-
-def format_ai_article(article: dict) -> str:
-    title = article.get("title") or "No title"
-    source = article.get("source") or "Unknown source"
-    url = article.get("url") or "No URL"
-    relevance = article.get("relevance")
-    sentiment = format_sentiment(article.get("sentiment"))
-    summary = article.get("summary") or "No summary available"
-    market_impact = article.get("market_impact") or "No market impact available"
-    key_points = article.get("key_points") or []
-
-    relevance_text = f"{min(relevance, 10)}/10" if relevance is not None else "Unknown"
-
-    message = (
-        "🤖 AI Market News Analysis\n\n"
-        "📰 Title:\n"
-        f"{title}\n\n"
-        "🏦 Source:\n"
-        f"{source}\n\n"
-        "📊 Relevance:\n"
-        f"{relevance_text}\n\n"
-        "📈 Sentiment:\n"
-        f"{sentiment}\n\n"
-        "🧠 Summary:\n"
-        f"{summary}\n\n"
-        "🌍 Possible Market Impact:\n"
-        f"{market_impact}\n\n"
-    )
-
-    if key_points:
-        message += "🔑 Key Points:\n"
-        for point in key_points:
-            message += f"• {point}\n"
-
-        message += "\n"
-
-    message += (
-        "🔗 Link:\n"
-        f"{url}"
-    )
-
-    return message
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
