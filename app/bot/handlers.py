@@ -112,6 +112,15 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         
+        is_ai_mode = should_use_ai(context)
+        status_message = None
+
+        if is_ai_mode:
+            status_message = await update.message.reply_text(
+                "🤖 AI analysis is running...\n\n"
+                "Fetching market news and analyzing the top article."
+            )
+        
         if keywords is None:
             articles = fetch_top_headlines(limit=50)
         else:
@@ -120,20 +129,30 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 limit_per_keyword=50,
             )
         if not articles:
-            await update.message.reply_text(
-                "Aktuell wurden keine passenden Markt-News gefunden."
-            )
+            no_articles_message = "Aktuell wurden keine passenden Markt-News gefunden."
+
+            if status_message:
+                await status_message.edit_text(no_articles_message)
+            else:
+                await update.message.reply_text(no_articles_message)
+
             return
         
-        if should_use_ai(context):
+        if is_ai_mode:
+            await status_message.edit_text(
+                "📰 Market news found.\n\n"
+                "🤖 Running AI analysis..."
+            )
+
             analyzed_article = analyze_article(articles[0])
             message = format_ai_article(analyzed_article)
 
-            await update.message.reply_text(
+            await status_message.edit_text(
                 message,
                 disable_web_page_preview=True,
             )
             return
+        
     
         message = f"Top Market News ({category}):\n\n"
 
