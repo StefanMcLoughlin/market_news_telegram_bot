@@ -52,3 +52,29 @@ def format_ai_article(article: dict) -> str:
     )
 
     return message
+
+def format_news_list(articles: list[dict], category: str) -> str:
+    message = f"Top Market News ({category}):\n\n"
+
+    for index, article in enumerate(articles[:5], start=1):
+        title = article.get("title") or "No title"
+        source = article.get("source") or "Unknown source"
+        url = article.get("url") or "No URL"
+        relevance = article.get("relevance")
+        sentiment = format_sentiment(article.get("sentiment"))
+
+        if relevance is not None:
+            display_relevance = min(relevance, 10)
+            relevance_text = f"{display_relevance}/10"
+        else:
+            relevance_text = "Unknown"
+
+        message += (
+            f"{index}. {title}\n"
+            f"Source: {source}\n"
+            f"Relevance: {relevance_text}\n"
+            f"Sentiment: {sentiment}\n"
+            f"Link: {url}\n\n"
+            )
+        
+    return message

@@ -3,7 +3,7 @@ from telegram.ext import ContextTypes
 
 from app.services.news_service import fetch_top_headlines, fetch_news_by_keywords
 from app.services.ai_service import analyze_article
-from app.bot.formatters import format_ai_article, format_sentiment
+from app.bot.formatters import format_ai_article, format_news_list
 
 
 NEWS_CATEGORIES = {
@@ -111,30 +111,7 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         
-    
-        message = f"Top Market News ({category}):\n\n"
-
-        for index, article in enumerate(articles[:5], start=1):
-            title = article.get("title") or "No title"
-            source = article.get("source") or "Unknown source"
-            url = article.get("url") or "No URL"
-            relevance = article.get("relevance")
-            sentiment = format_sentiment(article.get("sentiment"))
-
-            if relevance is not None:
-                display_relevance = min(relevance, 10)
-                relevance_text = f"{display_relevance}/10"
-            else:
-                relevance_text = "Unknown"
-
-            message += (
-                f"{index}. {title}\n"
-                f"Source: {source}\n"
-                f"Relevance: {relevance_text}\n"
-                f"Sentiment: {sentiment}\n"
-                f"Link: {url}\n\n"
-            )
-
+        message = format_news_list(articles, category)
         await update.message.reply_text(message, disable_web_page_preview=True)
 
     except Exception as error:
