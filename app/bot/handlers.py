@@ -54,23 +54,32 @@ def format_ai_article(article: dict) -> str:
     relevance_text = f"{min(relevance, 10)}/10" if relevance is not None else "Unknown"
 
     message = (
-        "AI Market News Analysis:\n\n"
-        f"Title: {title}\n"
-        f"Source: {source}\n"
-        f"Relevance: {relevance_text}\n"
-        f"Sentiment: {sentiment}\n\n"
-        f"Summary: {summary}\n\n"
-        f"Market Impact:\n{market_impact}\n\n"
+        "🤖 AI Market News Analysis\n\n"
+        "📰 Title:\n"
+        f"{title}\n\n"
+        "🏦 Source:\n"
+        f"{source}\n\n"
+        "📊 Relevance:\n"
+        f"{relevance_text}\n\n"
+        "📈 Sentiment:\n"
+        f"{sentiment}\n\n"
+        "🧠 Summary:\n"
+        f"{summary}\n\n"
+        "🌍 Possible Market Impact:\n"
+        f"{market_impact}\n\n"
     )
 
     if key_points:
-        message += "Key Points:\n"
+        message += "🔑 Key Points:\n"
         for point in key_points:
-            message += f"- {point}\n"
+            message += f"• {point}\n"
 
         message += "\n"
 
-    message += f"Link: {url}"
+    message += (
+        "🔗 Link:\n"
+        f"{url}"
+    )
 
     return message
 
@@ -93,7 +102,10 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/news macro - Zeigt Makro-News.\n"
         "/news stocks - Zeigt Aktienmarkt-News.\n"
         "/news gold - Zeigt Gold-/Dollar-News.\n"
-        "/news crypto ai - Analysiert die wichtigste Crypto-News mit AI."
+        "/news crypto ai - Analysiert die wichtigste Crypto-News mit AI.\n"
+        "/news macro ai - Analysiert die wichtigste Makro-News mit AI.\n"
+        "/news stocks ai - Analysiert die wichtigste Aktienmarkt-News mit AI.\n"
+        "/news gold ai - Analysiert die wichtigste Gold-/Dollar-News mit AI."
     )
 
 
@@ -131,7 +143,7 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not articles:
             no_articles_message = "Aktuell wurden keine passenden Markt-News gefunden."
 
-            if status_message:
+            if status_message is not None:
                 await status_message.edit_text(no_articles_message)
             else:
                 await update.message.reply_text(no_articles_message)
