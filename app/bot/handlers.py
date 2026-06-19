@@ -1,9 +1,14 @@
+import logging
+
 from telegram import Update
 from telegram.ext import ContextTypes
 
 from app.services.news_service import fetch_top_headlines, fetch_news_by_keywords
 from app.services.ai_service import analyze_article
 from app.bot.formatters import format_ai_article, format_news_list
+
+
+logger = logging.getLogger(__name__)
 
 
 NEWS_CATEGORIES = {
@@ -114,8 +119,8 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = format_news_list(articles, category)
         await update.message.reply_text(message, disable_web_page_preview=True)
 
-    except Exception as error:
-        print(f"Error while fetching news: {error}")
+    except Exception:
+        logger.exception("Error while handling news command")
         await update.message.reply_text(
             "Beim Laden der News ist ein Fehler aufgetreten. Bitte versuche es später erneut."
         )

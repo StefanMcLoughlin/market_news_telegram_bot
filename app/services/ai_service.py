@@ -1,9 +1,12 @@
+import logging
 import json
 
 from openai import OpenAI
 
 from app.config import OPENAI_API_KEY, OPENAI_MODEL
 
+
+logger = logging.getLogger(__name__)
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -69,14 +72,15 @@ def analyze_article(article: dict) -> dict:
         analysis = json.loads(content)
 
     except json.JSONDecodeError:
+        logger.warning("OpenAI response could not be parsed as JSON")
         analysis = {
             "summary": "The AI response could not be parsed correctly.",
             "market_impact": "Market impact analysis is currently unavailable.",
             "key_points": [],
         }
 
-    except Exception as error:
-        print(f"Error while analyzing article with OpenAI: {error}")
+    except Exception:
+        logger.exception("Error while analyzing article with OpenAI")
     
         analysis = {
             "summary": "AI analysis is currently unavailable.",
