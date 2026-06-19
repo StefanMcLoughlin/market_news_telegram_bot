@@ -1,6 +1,9 @@
 import json
+
 from openai import OpenAI
+
 from app.config import OPENAI_API_KEY, OPENAI_MODEL
+
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -19,7 +22,7 @@ Analyze the following market news article for a trader/investor.
 Return ONLY valid JSON with this exact structure:
 {{
     "summary": "short summary in 1-2 sentences",
-    "market_impact": "short explanation of the possible market impact"
+    "market_impact": "short explanation of the possible market impact",
     "key_points": ["point 1", "point 2", "point 3"]
 }}
 
@@ -32,38 +35,58 @@ URL: {url}
 
 Rules:
 - Be concise.
-- Do not give financial advice
-- Focus on possible impact on crypto, stocks, gold, USD, bonds or risk sentiment
-- If the article is not market relevant, sat that in market_impact
+- Do not give financial advice.
+- Focus on possible impact on crypto, stocks, gold, USD, bonds or risk sentiment.
+- If the article is not market relevant, say that in market_impact.
 """
+
+
+def normalize_key_points(key_points) -> list[str]:
+    if not isinstance(key_points, list):
+        return []
+    
+    return [str(point) for point in key_points if point]
 
 
 def analyze_article(article: dict) -> dict:
     if not OPENAI_API_KEY:
-        raise ValueError("OPENAI_API_KEY is missing, Please check your .env file.")
+        raise ValueError("OPENAI_API_KEY is missing. Please check your .env file.")
     
     prompt = build_article_analysis_prompt(article)
 
-    response = client.responses.create(
-        model=OPENAI_MODEL,
-        input=prompt,
-        temperature=0.2,
-    )
-
-    content = response.output_text
-
     try:
+        response = client.responses.create(
+            model=OPENAI_MODEL,
+            input=prompt,
+            temperature=0.2,
+        )
+
+        content = response.output_text
+
+        if not content:
+            raise ValueError("OpenAI response was empty.")
+
         analysis = json.loads(content)
+
     except json.JSONDecodeError:
         analysis = {
-            "summary": content,
-            "market_impact": "Could not parse structured market impact",
-            "key points": [],
+            "summary": "The AI response could not be parsed correctly.",
+            "market_impact": "Market impact analysis is currently unavailable.",
+            "key_points": [],
+        }
+
+    except Exception as error:
+        print(f"Error while analyzing article with OpenAI: {error}")
+    
+        analysis = {
+            "summary": "AI analysis is currently unavailable.",
+            "market_impact": "The article could not be analyzed at this time.",
+            "key_points": [],
         }
 
     return {
         **article,
-        "summary": analysis.get("summary"),
-        "market_impact": analysis.get("market_impact"),
-        "key_points": analysis.get("key_points", []),
+        "summary": analysis.get("summary") or "No summary available",
+        "market_impact": analysis.get("market_impact") or "No market impact available",
+        "key_points": normalize_key_points(analysis.get("key_points")),
     }
