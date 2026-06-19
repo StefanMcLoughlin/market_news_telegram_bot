@@ -10,6 +10,9 @@ logging.basicConfig(
     level=logging.INFO,
 )
 
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("telegram").setLevel(logging.WARNING)
+
 logger = logging.getLogger(__name__)
 
 
