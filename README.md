@@ -4,7 +4,7 @@ Ein Python-basierter Telegram Bot, der aktuelle marktbezogene News abruft, filte
 
 Zusätzlich kann der Bot die wichtigste News einer Kategorie mit OpenAI analysieren und eine kurze AI Market Analysis mit Summary, möglichem Market Impact und Key Points ausgeben.
 
-Das Projekt wurde im Rahmen meiner AI-/Backend-Ausbildung gebaut, um praktische Erfahrung mit APIs, Telegram Bots, externer Datenverarbeitung, AI-Integration, Projektstruktur und GitHub-Workflow zu sammeln.
+Das Projekt wurde im Rahmen meiner AI-/Backend-Ausbildung gebaut, um praktische Erfahrung mit APIs, Telegram Bots, externer Datenverarbeitung, AI-Integration, Projektstruktur, Testing, Logging und GitHub-Workflow zu sammeln.
 
 ---
 
@@ -44,6 +44,9 @@ Der Bot kann aktuell:
 * eine AI Market Analysis mit Summary, Market Impact und Key Points ausgeben
 * während der AI-Verarbeitung eine Status-Nachricht anzeigen
 * AI-Antworten robuster verarbeiten und Fehlerfälle abfangen
+* Fehler mit Python Logging protokollieren
+* Unit Tests mit pytest ausführen
+* Tests automatisch über GitHub Actions prüfen lassen
 
 ---
 
@@ -154,6 +157,8 @@ Die AI-Analyse enthält aktuell:
 * Key Points
 * Link zum Artikel
 
+Der OpenAI Client wird erst während der Analyse erstellt und nicht bereits beim Import des Moduls. Dadurch bleiben Unit Tests und GitHub Actions unabhängig von einem lokalen OpenAI API Key.
+
 ---
 
 ## User Experience
@@ -239,6 +244,8 @@ https://example.com/article
 * OpenAI API
 * NewsAPI.ai / EventRegistry API
 * Telegram Bot API
+* pytest
+* GitHub Actions
 * Git
 * GitHub
 
@@ -256,12 +263,22 @@ market_news_telegram_bot/
 │   │
 │   ├── bot/
 │   │   ├── __init__.py
-│   │   └── handlers.py
+│   │   ├── handlers.py
+│   │   └── formatters.py
 │   │
 │   └── services/
 │       ├── __init__.py
 │       ├── news_service.py
 │       └── ai_service.py
+│
+├── tests/
+│   ├── __init__.py
+│   ├── test_formatters.py
+│   └── test_ai_service.py
+│
+├── .github/
+│   └── workflows/
+│       └── tests.yml
 │
 ├── .env.example
 ├── .gitignore
@@ -333,13 +350,76 @@ Als Vorlage dient:
 python -m app.main
 ```
 
-Wenn der Bot erfolgreich startet, erscheint im Terminal:
+Wenn der Bot erfolgreich startet, erscheint im Terminal eine Log-Ausgabe:
 
 ```text
-Bot is running...
+app.main - INFO - Bot is running...
 ```
 
 Danach kann der Bot in Telegram verwendet werden.
+
+---
+
+## Tests
+
+Das Projekt enthält Unit Tests für testbare Funktionen ohne externe API-Calls.
+
+Aktuell werden unter anderem getestet:
+
+* Sentiment-Formatierung
+* normale News-Formatierung
+* AI-Analyse-Formatierung
+* Normalisierung von Key Points
+
+Tests lokal ausführen:
+
+```bash
+python -m pytest
+```
+
+Erwartung:
+
+```text
+all tests passed
+```
+
+---
+
+## GitHub Actions / CI
+
+Das Projekt nutzt GitHub Actions, um Tests automatisch bei jedem Push und Pull Request auszuführen.
+
+Workflow-Datei:
+
+```text
+.github/workflows/tests.yml
+```
+
+Der Workflow führt folgende Schritte aus:
+
+```text
+1. Repository auschecken
+2. Python installieren
+3. Dependencies installieren
+4. pytest ausführen
+```
+
+Dadurch wird automatisch geprüft, ob neue Änderungen bestehende Tests brechen.
+
+---
+
+## Logging
+
+Das Projekt nutzt Python Logging statt einfacher `print()` Ausgaben.
+
+Aktuell werden unter anderem geloggt:
+
+* Bot-Start
+* Fehler im Telegram Handler
+* OpenAI-Fehler
+* JSON Parsing Probleme bei AI-Antworten
+
+Zusätzlich wurden laute Drittanbieter-Logs reduziert, damit das Terminal übersichtlich bleibt.
 
 ---
 
@@ -365,6 +445,10 @@ In diesem Projekt wurden folgende Themen praktisch umgesetzt:
 * Fehlerbehandlung für externe API Calls
 * User Experience durch Status Messages
 * Telegram Message Formatting
+* Refactoring in Formatter-Modul
+* Python Logging
+* Unit Tests mit pytest
+* GitHub Actions CI Workflow
 * Git & GitHub Workflow mit sinnvollen Commits
 
 ---
@@ -373,11 +457,10 @@ In diesem Projekt wurden folgende Themen praktisch umgesetzt:
 
 Geplante nächste Schritte:
 
-* Logging statt `print`
-* Refactoring der Formatter-Logik
-* Tests mit pytest
-* bessere Fehlerbehandlung im Telegram Handler
+* finaler MVP-Test aller Commands
 * kompaktere AI-Ausgabe bei langen Antworten
+* bessere Fehlerbehandlung im Telegram Handler weiter ausbauen
+* Mock-Tests für OpenAI API Calls
 * optional: mehrere Top-News analysieren
 * optional: automatische News-Updates per Scheduler
 * optional: Datenbank zur Speicherung relevanter News
@@ -392,9 +475,11 @@ Geplante nächste Schritte:
 Aktueller Status:
 
 ```text
-MVP in Entwicklung
+MVP v1 kurz vor Abschluss
 ```
 
 Der Bot ist lokal lauffähig und kann echte Markt-News abrufen, filtern und in Telegram ausgeben.
 
 Die OpenAI-Anbindung funktioniert und kann die wichtigste News einer Kategorie analysieren.
+
+Lokale Tests und GitHub Actions laufen erfolgreich.
