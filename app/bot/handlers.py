@@ -60,7 +60,21 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def send_or_edit_error_message(update: Update, status_message) -> None:
+    error_message = (
+        "Beim Laden der News ist ein Fehler aufgetreten. "
+        "Bitte versuch es später erneut."
+    )
+
+    if status_message is not None:
+        await status_message.edit_text(error_message)
+    else:
+        await update.message.reply_text(error_message)
+
+
 async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    status_message = None
+
     try:
         category, keywords = get_news_category(context)
 
@@ -76,7 +90,6 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         
         is_ai_mode = should_use_ai(context)
-        status_message = None
 
         if is_ai_mode:
             status_message = await update.message.reply_text(
@@ -121,6 +134,4 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     except Exception:
         logger.exception("Error while handling news command")
-        await update.message.reply_text(
-            "Beim Laden der News ist ein Fehler aufgetreten. Bitte versuche es später erneut."
-        )
+        await send_or_edit_error_message(update, status_message)
