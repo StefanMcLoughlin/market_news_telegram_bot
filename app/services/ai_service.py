@@ -8,8 +8,6 @@ from app.config import OPENAI_API_KEY, OPENAI_MODEL
 
 logger = logging.getLogger(__name__)
 
-client = OpenAI(api_key=OPENAI_API_KEY)
-
 def build_article_analysis_prompt(article: dict) -> str:
     title = article.get("title") or ""
     source = article.get("source") or ""
@@ -55,6 +53,8 @@ def analyze_article(article: dict) -> dict:
     if not OPENAI_API_KEY:
         raise ValueError("OPENAI_API_KEY is missing. Please check your .env file.")
     
+    client = OpenAI(api_key=OPENAI_API_KEY)
+
     prompt = build_article_analysis_prompt(article)
 
     try:
