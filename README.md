@@ -221,6 +221,10 @@ Dadurch bleibt der Chat sauber und der User sieht jederzeit, dass der Bot arbeit
 Falls während des AI-Flows ein Fehler auftritt und bereits eine Status-Nachricht existiert, wird diese Status-Nachricht durch eine Fehlermeldung ersetzt, anstatt eine zusätzliche Nachricht zu senden.
 
 ---
+## Demo Screenshot
+
+![Telegram AI Market News Analysis](assets/telegram-ai-analysis.png)
+
 
 ## Beispiel-Ausgabe
 
