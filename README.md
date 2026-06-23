@@ -4,7 +4,7 @@ Ein Python-basierter Telegram Bot, der aktuelle marktbezogene News abruft, filte
 
 Zusätzlich kann der Bot die wichtigste News einer Kategorie mit OpenAI analysieren und eine kurze AI Market Analysis mit Summary, möglichem Market Impact und Key Points ausgeben.
 
-Das Projekt wurde im Rahmen meiner AI-/Backend-Ausbildung gebaut, um praktische Erfahrung mit APIs, Telegram Bots, externer Datenverarbeitung, AI-Integration, Projektstruktur, Testing, Logging und GitHub-Workflow zu sammeln.
+Das Projekt wurde im Rahmen meiner AI-/Backend-Ausbildung gebaut, um praktische Erfahrung mit APIs, Telegram Bots, externer Datenverarbeitung, AI-Integration, Projektstruktur, Testing, Logging, Fehlerbehandlung und GitHub-Workflow zu sammeln.
 
 ---
 
@@ -44,6 +44,8 @@ Der Bot kann aktuell:
 * eine AI Market Analysis mit Summary, Market Impact und Key Points ausgeben
 * während der AI-Verarbeitung eine Status-Nachricht anzeigen
 * AI-Antworten robuster verarbeiten und Fehlerfälle abfangen
+* Timeouts und Fehler der News-API gezielt behandeln
+* verständliche User-Meldungen bei API-Problemen anzeigen
 * Fehler mit Python Logging protokollieren
 * Unit Tests mit pytest ausführen
 * Tests automatisch über GitHub Actions prüfen lassen
@@ -124,6 +126,33 @@ Die News werden anschließend nach Quellenqualität und Relevance Score sortiert
 
 ---
 
+## News API Fehlerbehandlung
+
+Da der Bot auf eine externe News-API zugreift, können gelegentlich Netzwerkfehler, Timeouts oder API-Probleme auftreten.
+
+Dafür wurden eigene Fehlerklassen eingeführt:
+
+```text
+NewsAPIError
+NewsAPITimeoutError
+```
+
+Wenn die News-API nicht rechtzeitig antwortet, erhält der User eine spezifische Meldung:
+
+```text
+Die News-API hat nicht rechtzeitig geantwortet. Bitte versuche es gleich nochmal.
+```
+
+Wenn die News-API allgemein nicht erreichbar ist oder ein Request fehlschlägt, erhält der User:
+
+```text
+Die News-API ist aktuell nicht erreichbar. Bitte versuche es später erneut.
+```
+
+Technische Details werden nicht an den User weitergegeben, sondern sauber über Python Logging protokolliert.
+
+---
+
 ## AI-Analyse
 
 Für den AI-Modus wird nur der relevanteste Artikel einer Kategorie analysiert.
@@ -184,6 +213,8 @@ Danach wird die Status-Nachricht aktualisiert:
 Anschließend wird dieselbe Nachricht durch die finale AI Market Analysis ersetzt.
 
 Dadurch bleibt der Chat sauber und der User sieht jederzeit, dass der Bot arbeitet.
+
+Falls während des AI-Flows ein Fehler auftritt und bereits eine Status-Nachricht existiert, wird diese Status-Nachricht durch eine Fehlermeldung ersetzt, anstatt eine zusätzliche Nachricht zu senden.
 
 ---
 
@@ -418,6 +449,8 @@ Aktuell werden unter anderem geloggt:
 * Fehler im Telegram Handler
 * OpenAI-Fehler
 * JSON Parsing Probleme bei AI-Antworten
+* News-API Timeouts
+* News-API Request-Fehler
 
 Zusätzlich wurden laute Drittanbieter-Logs reduziert, damit das Terminal übersichtlich bleibt.
 
@@ -434,6 +467,7 @@ In diesem Projekt wurden folgende Themen praktisch umgesetzt:
 * externe API-Anbindung
 * API Response Verarbeitung
 * Service Layer
+* eigene Exceptions
 * News-Filterlogik
 * Sortierung nach Relevance
 * Duplikat-Entfernung
@@ -443,6 +477,7 @@ In diesem Projekt wurden folgende Themen praktisch umgesetzt:
 * Prompt Engineering für strukturierte JSON-Antworten
 * JSON Parsing
 * Fehlerbehandlung für externe API Calls
+* Timeout Handling
 * User Experience durch Status Messages
 * Telegram Message Formatting
 * Refactoring in Formatter-Modul
@@ -455,12 +490,12 @@ In diesem Projekt wurden folgende Themen praktisch umgesetzt:
 
 ## Roadmap
 
-Geplante nächste Schritte:
+Mögliche nächste Schritte:
 
 * finaler MVP-Test aller Commands
 * kompaktere AI-Ausgabe bei langen Antworten
-* bessere Fehlerbehandlung im Telegram Handler weiter ausbauen
 * Mock-Tests für OpenAI API Calls
+* Tests für News API Fehlerbehandlung
 * optional: mehrere Top-News analysieren
 * optional: automatische News-Updates per Scheduler
 * optional: Datenbank zur Speicherung relevanter News
@@ -475,7 +510,7 @@ Geplante nächste Schritte:
 Aktueller Status:
 
 ```text
-MVP v1 kurz vor Abschluss
+MVP v1 technisch abgeschlossen
 ```
 
 Der Bot ist lokal lauffähig und kann echte Markt-News abrufen, filtern und in Telegram ausgeben.
@@ -483,3 +518,5 @@ Der Bot ist lokal lauffähig und kann echte Markt-News abrufen, filtern und in T
 Die OpenAI-Anbindung funktioniert und kann die wichtigste News einer Kategorie analysieren.
 
 Lokale Tests und GitHub Actions laufen erfolgreich.
+
+Externe API-Fehler wie Timeouts werden gezielt behandelt und für User verständlich ausgegeben.
