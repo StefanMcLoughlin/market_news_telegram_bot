@@ -1,5 +1,16 @@
+import logging
 import requests
 from app.config import NEWS_API_KEY, NEWS_KEYWORD, NEWS_LANGUAGE
+
+
+logger = logging.getLogger(__name__)
+
+class NewsAPIError(Exception):
+    pass
+
+class NewsAPITimeoutError(NewsAPIError):
+    pass
+
 
 NEWS_API_URL = "https://eventregistry.org/api/v1/article/getArticles"
 
@@ -188,8 +199,17 @@ def fetch_top_headlines(limit: int = 5, keyword: str |None = None):
         "dataType": ["news"],
     }
 
-    response = requests.post(NEWS_API_URL, json=payload, timeout=10)
-    response.raise_for_status()
+    try:
+        response = requests.post(NEWS_API_URL, json=payload, timeout=10)
+        response.raise_for_status()
+
+    except requests.exceptions.Timeout:
+        logger.warning("News API request timed out")
+        raise NewsAPITimeoutError("News API request timed out")
+    
+    except requests.exceptions.RequestException:
+        logger.exception("News API request failed")
+        raise NewsAPIError("News API request failed")
 
     data = response.json()
     articles = data.get("articles", {}).get("results", [])

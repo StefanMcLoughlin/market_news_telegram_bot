@@ -3,7 +3,12 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from app.services.news_service import fetch_top_headlines, fetch_news_by_keywords
+from app.services.news_service import (
+    NewsAPIError,
+    NewsAPITimeoutError,
+    fetch_top_headlines,
+    fetch_news_by_keywords,
+)
 from app.services.ai_service import analyze_article
 from app.bot.formatters import format_ai_article, format_news_list
 
@@ -60,16 +65,18 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def send_or_edit_error_message(update: Update, status_message) -> None:
-    error_message = (
-        "Beim Laden der News ist ein Fehler aufgetreten. "
-        "Bitte versuch es später erneut."
-    )
-
-    if status_message is not None:
-        await status_message.edit_text(error_message)
-    else:
-        await update.message.reply_text(error_message)
+async def send_or_edit_error_message(
+        update: Update,
+        status_message,
+        error_message = (
+            "Beim Laden der News ist ein Fehler aufgetreten. "
+            "Bitte versuch es später erneut."
+        ),
+    ) -> None:
+        if status_message is not None:
+            await status_message.edit_text(error_message)
+        else:
+            await update.message.reply_text(error_message)
 
 
 async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -131,6 +138,22 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         message = format_news_list(articles, category)
         await update.message.reply_text(message, disable_web_page_preview=True)
+
+    except NewsAPITimeoutError:
+        logger.warning("News command failed because News API timed out")
+        await send_or_edit_error_message(
+            update,
+            status_message,
+            "Die News-API hat nicht rechtzeitig geantwortet. Bitte versuche es gleich nochmal.",
+    )
+
+    except NewsAPIError:
+        logger.exception("News command failed because News API request failed")
+        await send_or_edit_error_message(
+            update,
+            status_message,
+            "Die News-API ist aktuell nicht erreichbar. Bitte versuche es später erneut.",
+    )
 
     except Exception:
         logger.exception("Error while handling news command")
