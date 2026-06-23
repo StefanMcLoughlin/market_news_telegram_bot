@@ -1,12 +1,15 @@
 import logging
-import requests
-from app.config import NEWS_API_KEY, NEWS_KEYWORD, NEWS_LANGUAGE
 
+import requests
+
+from app.config import NEWS_API_KEY, NEWS_KEYWORD, NEWS_LANGUAGE
 
 logger = logging.getLogger(__name__)
 
+
 class NewsAPIError(Exception):
     pass
+
 
 class NewsAPITimeoutError(NewsAPIError):
     pass
@@ -135,9 +138,7 @@ def get_article_source(article: dict) -> str:
 def is_blocked_source(article: dict) -> bool:
     source = get_article_source(article).lower()
 
-    return any(
-        blocked_source.lower() in source for blocked_source in BLOCKED_SOURCES
-    )
+    return any(blocked_source.lower() in source for blocked_source in BLOCKED_SOURCES)
 
 
 def is_preferred_source(article: dict) -> bool:
@@ -151,15 +152,13 @@ def is_preferred_source(article: dict) -> bool:
 def is_relevant_article(article: dict) -> bool:
     if is_blocked_source(article):
         return False
-    
+
     article_text = get_article_text(article)
 
-    has_blocked_keyword = any(
-        keyword in article_text for keyword in BLOCKED_KEYWORDS
-    )
+    has_blocked_keyword = any(keyword in article_text for keyword in BLOCKED_KEYWORDS)
     if has_blocked_keyword:
         return False
-    
+
     relevance = article.get("relevance") or 0
 
     if is_preferred_source(article):
@@ -168,7 +167,7 @@ def is_relevant_article(article: dict) -> bool:
     else:
         if relevance < MIN_RELEVANCE_UNKNOWN_SOURCE:
             return False
-    
+
     has_important_keyword = any(
         keyword in article_text for keyword in IMPORTANT_KEYWORDS
     )
@@ -180,12 +179,12 @@ def filter_articles(articles: list[dict]) -> list[dict]:
     return [article for article in articles if is_relevant_article(article)]
 
 
-def fetch_top_headlines(limit: int = 5, keyword: str |None = None):
+def fetch_top_headlines(limit: int = 5, keyword: str | None = None):
     if not NEWS_API_KEY:
         raise ValueError("NEWS_API_KEY is missing. Please check your .env file.")
-    
+
     search_keyword = keyword or NEWS_KEYWORD
-    
+
     payload = {
         "action": "getArticles",
         "apiKey": NEWS_API_KEY,
@@ -203,19 +202,23 @@ def fetch_top_headlines(limit: int = 5, keyword: str |None = None):
         response = requests.post(NEWS_API_URL, json=payload, timeout=10)
         response.raise_for_status()
 
-    except requests.exceptions.Timeout:
+    except requests.exceptions.Timeout as error:
         logger.warning("News API request timed out")
-        raise NewsAPITimeoutError("News API request timed out")
-    
-    except requests.exceptions.RequestException:
+        raise NewsAPITimeoutError("News API request timed out") from error
+
+    except requests.exceptions.RequestException as error:
         logger.exception("News API request failed")
-        raise NewsAPIError("News API request failed")
+        raise NewsAPIError("News API request failed") from error
 
     data = response.json()
     articles = data.get("articles", {}).get("results", [])
     filtered_articles = filter_articles(articles)
     filtered_articles.sort(
-        key=lambda article: (is_preferred_source(article), article.get("relevance") or 0,), reverse=True,
+        key=lambda article: (
+            is_preferred_source(article),
+            article.get("relevance") or 0,
+        ),
+        reverse=True,
     )
 
     cleaned_articles = []
@@ -223,26 +226,28 @@ def fetch_top_headlines(limit: int = 5, keyword: str |None = None):
     for article in filtered_articles:
         cleaned_articles.append(
             {
-            "title": article.get("title"),
-            "source": get_article_source(article),
-            "url": article.get("url"),
-            "published_at": article.get("dateTime"),
-            "sentiment": article.get("sentiment"),
-            "relevance": article.get("relevance"),
-            "is_preferred_source": is_preferred_source(article),
-            "summary": None,
-            "market_impact": None,
-            "key_points": [],
+                "title": article.get("title"),
+                "source": get_article_source(article),
+                "url": article.get("url"),
+                "published_at": article.get("dateTime"),
+                "sentiment": article.get("sentiment"),
+                "relevance": article.get("relevance"),
+                "is_preferred_source": is_preferred_source(article),
+                "summary": None,
+                "market_impact": None,
+                "key_points": [],
             }
         )
     return cleaned_articles
 
-def fetch_news_by_keywords(keywords: list[str], limit_per_keyword: int = 20) -> list[dict]:
+
+def fetch_news_by_keywords(
+    keywords: list[str], limit_per_keyword: int = 20
+) -> list[dict]:
     all_articles = []
     seen_urls = set()
 
     for keyword in keywords:
-
         articles = fetch_top_headlines(
             limit=limit_per_keyword,
             keyword=keyword,

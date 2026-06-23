@@ -3,15 +3,14 @@ import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from app.bot.formatters import format_ai_article, format_news_list
+from app.services.ai_service import analyze_article
 from app.services.news_service import (
     NewsAPIError,
     NewsAPITimeoutError,
-    fetch_top_headlines,
     fetch_news_by_keywords,
+    fetch_top_headlines,
 )
-from app.services.ai_service import analyze_article
-from app.bot.formatters import format_ai_article, format_news_list
-
 
 logger = logging.getLogger(__name__)
 
@@ -24,15 +23,17 @@ NEWS_CATEGORIES = {
 }
 
 
-def get_news_category(context: ContextTypes.DEFAULT_TYPE) -> tuple[str, list[str] | None]:
+def get_news_category(
+    context: ContextTypes.DEFAULT_TYPE,
+) -> tuple[str, list[str] | None]:
     if not context.args:
         return "general", None
-    
+
     category = context.args[0].lower()
 
     if category not in NEWS_CATEGORIES:
         return "unknown", None
-    
+
     return category, NEWS_CATEGORIES[category]
 
 
@@ -66,17 +67,17 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def send_or_edit_error_message(
-        update: Update,
-        status_message,
-        error_message = (
-            "Beim Laden der News ist ein Fehler aufgetreten. "
-            "Bitte versuch es später erneut."
-        ),
-    ) -> None:
-        if status_message is not None:
-            await status_message.edit_text(error_message)
-        else:
-            await update.message.reply_text(error_message)
+    update: Update,
+    status_message,
+    error_message=(
+        "Beim Laden der News ist ein Fehler aufgetreten. "
+        "Bitte versuch es später erneut."
+    ),
+) -> None:
+    if status_message is not None:
+        await status_message.edit_text(error_message)
+    else:
+        await update.message.reply_text(error_message)
 
 
 async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -95,7 +96,7 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "/news gold"
             )
             return
-        
+
         is_ai_mode = should_use_ai(context)
 
         if is_ai_mode:
@@ -103,7 +104,7 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "🤖 AI analysis is running...\n\n"
                 "Fetching market news and analyzing the top article."
             )
-        
+
         if keywords is None:
             articles = fetch_top_headlines(limit=50)
         else:
@@ -120,11 +121,10 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text(no_articles_message)
 
             return
-        
+
         if is_ai_mode:
             await status_message.edit_text(
-                "📰 Market news found.\n\n"
-                "🤖 Running AI analysis..."
+                "📰 Market news found.\n\n🤖 Running AI analysis..."
             )
 
             analyzed_article = analyze_article(articles[0])
@@ -135,7 +135,7 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 disable_web_page_preview=True,
             )
             return
-        
+
         message = format_news_list(articles, category)
         await update.message.reply_text(message, disable_web_page_preview=True)
 
@@ -144,16 +144,22 @@ async def news_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_or_edit_error_message(
             update,
             status_message,
-            "Die News-API hat nicht rechtzeitig geantwortet. Bitte versuche es gleich nochmal.",
-    )
+            (
+                "Die News-API hat nicht rechtzeitig geantwortet. "
+                "Bitte versuche es gleich nochmal."
+            ),
+        )
 
     except NewsAPIError:
         logger.exception("News command failed because News API request failed")
         await send_or_edit_error_message(
             update,
             status_message,
-            "Die News-API ist aktuell nicht erreichbar. Bitte versuche es später erneut.",
-    )
+            (
+                "Die News-API ist aktuell nicht erreichbar. "
+                "Bitte versuche es später erneut."
+            ),
+        )
 
     except Exception:
         logger.exception("Error while handling news command")

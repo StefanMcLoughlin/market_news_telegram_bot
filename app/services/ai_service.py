@@ -1,12 +1,12 @@
-import logging
 import json
+import logging
 
 from openai import OpenAI
 
 from app.config import OPENAI_API_KEY, OPENAI_MODEL
 
-
 logger = logging.getLogger(__name__)
+
 
 def build_article_analysis_prompt(article: dict) -> str:
     title = article.get("title") or ""
@@ -45,14 +45,14 @@ Rules:
 def normalize_key_points(key_points) -> list[str]:
     if not isinstance(key_points, list):
         return []
-    
+
     return [str(point) for point in key_points if point]
 
 
 def analyze_article(article: dict) -> dict:
     if not OPENAI_API_KEY:
         raise ValueError("OPENAI_API_KEY is missing. Please check your .env file.")
-    
+
     client = OpenAI(api_key=OPENAI_API_KEY)
 
     prompt = build_article_analysis_prompt(article)
@@ -81,7 +81,7 @@ def analyze_article(article: dict) -> dict:
 
     except Exception:
         logger.exception("Error while analyzing article with OpenAI")
-    
+
         analysis = {
             "summary": "AI analysis is currently unavailable.",
             "market_impact": "The article could not be analyzed at this time.",

@@ -1,13 +1,13 @@
 def format_sentiment(sentiment: float | None) -> str:
     if sentiment is None:
         return "Unknown"
-    
+
     if sentiment > 0.1:
         return "Bullish"
-    
+
     if sentiment < -0.1:
         return "Bearish"
-    
+
     return "Neutral"
 
 
@@ -46,12 +46,10 @@ def format_ai_article(article: dict) -> str:
 
         message += "\n"
 
-    message += (
-        "🔗 Link:\n"
-        f"{url}"
-    )
+    message += f"🔗 Link:\n{url}"
 
     return message
+
 
 def format_news_list(articles: list[dict], category: str) -> str:
     message = f"Top Market News ({category}):\n\n"
@@ -75,6 +73,6 @@ def format_news_list(articles: list[dict], category: str) -> str:
             f"Relevance: {relevance_text}\n"
             f"Sentiment: {sentiment}\n"
             f"Link: {url}\n\n"
-            )
-        
+        )
+
     return message

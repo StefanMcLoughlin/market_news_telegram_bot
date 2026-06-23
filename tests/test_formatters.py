@@ -6,20 +6,24 @@ def test_format_sentiment_returns_unknown_for_none():
 
     assert result == "Unknown"
 
+
 def test_format_sentiment_returns_bullish_for_positive_value():
     result = format_sentiment(0.2)
 
     assert result == "Bullish"
+
 
 def test_format_sentiment_returns_bearish_for_negative_value():
     result = format_sentiment(-0.2)
 
     assert result == "Bearish"
 
+
 def test_format_sentiment_returns_neutral_for_small_value():
     result = format_sentiment(0.05)
 
     assert result == "Neutral"
+
 
 def test_format_news_list_contains_article_data():
     articles = [
@@ -40,6 +44,7 @@ def test_format_news_list_contains_article_data():
     assert "8/10" in result
     assert "Bullish" in result
     assert "https://example.com/bitcoin" in result
+
 
 def test_format_ai_article_contains_analysis_data():
     article = {
