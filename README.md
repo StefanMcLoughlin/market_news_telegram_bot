@@ -4,7 +4,7 @@ Ein Python-basierter Telegram Bot, der aktuelle marktbezogene News abruft, filte
 
 Zusätzlich kann der Bot die wichtigste News einer Kategorie mit OpenAI analysieren und eine kurze AI Market Analysis mit Summary, möglichem Market Impact und Key Points ausgeben.
 
-Das Projekt wurde im Rahmen meiner AI-/Backend-Ausbildung gebaut, um praktische Erfahrung mit APIs, Telegram Bots, externer Datenverarbeitung, AI-Integration, Projektstruktur, Testing, Logging, Fehlerbehandlung und GitHub-Workflow zu sammeln.
+Das Projekt wurde im Rahmen meiner AI-/Backend-Ausbildung gebaut, um praktische Erfahrung mit APIs, Telegram Bots, externer Datenverarbeitung, AI-Integration, Projektstruktur, Testing, Logging, Fehlerbehandlung, Linting, Formatting und GitHub-Workflow zu sammeln.
 
 ---
 
@@ -48,7 +48,9 @@ Der Bot kann aktuell:
 * verständliche User-Meldungen bei API-Problemen anzeigen
 * Fehler mit Python Logging protokollieren
 * Unit Tests mit pytest ausführen
-* Tests automatisch über GitHub Actions prüfen lassen
+* Codequalität mit Ruff prüfen
+* Codeformatierung mit Ruff sicherstellen
+* Tests, Linting und Formatting automatisch über GitHub Actions prüfen lassen
 
 ---
 
@@ -150,6 +152,8 @@ Die News-API ist aktuell nicht erreichbar. Bitte versuche es später erneut.
 ```
 
 Technische Details werden nicht an den User weitergegeben, sondern sauber über Python Logging protokolliert.
+
+Die Fehlerbehandlung der News-API wird zusätzlich mit Unit Tests geprüft. Dabei werden externe API-Calls mit Mocking simuliert, damit die Tests stabil, schnell und unabhängig von EventRegistry laufen.
 
 ---
 
@@ -276,6 +280,7 @@ https://example.com/article
 * NewsAPI.ai / EventRegistry API
 * Telegram Bot API
 * pytest
+* Ruff
 * GitHub Actions
 * Git
 * GitHub
@@ -305,7 +310,8 @@ market_news_telegram_bot/
 ├── tests/
 │   ├── __init__.py
 │   ├── test_formatters.py
-│   └── test_ai_service.py
+│   ├── test_ai_service.py
+│   └── test_news_service.py
 │
 ├── .github/
 │   └── workflows/
@@ -313,6 +319,7 @@ market_news_telegram_bot/
 │
 ├── .env.example
 ├── .gitignore
+├── pyproject.toml
 ├── README.md
 └── requirements.txt
 ```
@@ -393,7 +400,7 @@ Danach kann der Bot in Telegram verwendet werden.
 
 ## Tests
 
-Das Projekt enthält Unit Tests für testbare Funktionen ohne externe API-Calls.
+Das Projekt enthält Unit Tests für testbare Funktionen ohne echte externe API-Calls.
 
 Aktuell werden unter anderem getestet:
 
@@ -401,6 +408,9 @@ Aktuell werden unter anderem getestet:
 * normale News-Formatierung
 * AI-Analyse-Formatierung
 * Normalisierung von Key Points
+* News API Timeout Handling
+* News API Request Error Handling
+* erfolgreiche Verarbeitung einer simulierten News API Response
 
 Tests lokal ausführen:
 
@@ -416,9 +426,45 @@ all tests passed
 
 ---
 
+## Ruff: Linting & Formatting
+
+Das Projekt nutzt Ruff für Codequalität und Formatierung.
+
+Linting ausführen:
+
+```bash
+python -m ruff check .
+```
+
+Formatierung prüfen:
+
+```bash
+python -m ruff format --check .
+```
+
+Code automatisch formatieren:
+
+```bash
+python -m ruff format .
+```
+
+Automatisch fixbare Ruff-Probleme beheben:
+
+```bash
+python -m ruff check . --fix
+```
+
+Die Ruff-Konfiguration liegt in:
+
+```text
+pyproject.toml
+```
+
+---
+
 ## GitHub Actions / CI
 
-Das Projekt nutzt GitHub Actions, um Tests automatisch bei jedem Push und Pull Request auszuführen.
+Das Projekt nutzt GitHub Actions, um Codequalität und Tests automatisch bei jedem Push und Pull Request zu prüfen.
 
 Workflow-Datei:
 
@@ -432,10 +478,12 @@ Der Workflow führt folgende Schritte aus:
 1. Repository auschecken
 2. Python installieren
 3. Dependencies installieren
-4. pytest ausführen
+4. Ruff Lint Check ausführen
+5. Ruff Format Check ausführen
+6. pytest ausführen
 ```
 
-Dadurch wird automatisch geprüft, ob neue Änderungen bestehende Tests brechen.
+Dadurch wird automatisch geprüft, ob neue Änderungen bestehende Tests brechen oder gegen die Codequalitätsregeln verstoßen.
 
 ---
 
@@ -483,6 +531,8 @@ In diesem Projekt wurden folgende Themen praktisch umgesetzt:
 * Refactoring in Formatter-Modul
 * Python Logging
 * Unit Tests mit pytest
+* Mocking externer API-Calls in Tests
+* Ruff Linting & Formatting
 * GitHub Actions CI Workflow
 * Git & GitHub Workflow mit sinnvollen Commits
 
@@ -492,10 +542,10 @@ In diesem Projekt wurden folgende Themen praktisch umgesetzt:
 
 Mögliche nächste Schritte:
 
-* finaler MVP-Test aller Commands
+* finaler Portfolio-Review
 * kompaktere AI-Ausgabe bei langen Antworten
 * Mock-Tests für OpenAI API Calls
-* Tests für News API Fehlerbehandlung
+* Kategorien aus dem Handler auslagern
 * optional: mehrere Top-News analysieren
 * optional: automatische News-Updates per Scheduler
 * optional: Datenbank zur Speicherung relevanter News
@@ -510,13 +560,13 @@ Mögliche nächste Schritte:
 Aktueller Status:
 
 ```text
-MVP v1 technisch abgeschlossen
+MVP v1 abgeschlossen
 ```
 
 Der Bot ist lokal lauffähig und kann echte Markt-News abrufen, filtern und in Telegram ausgeben.
 
 Die OpenAI-Anbindung funktioniert und kann die wichtigste News einer Kategorie analysieren.
 
-Lokale Tests und GitHub Actions laufen erfolgreich.
+Lokale Tests, Ruff Checks und GitHub Actions laufen erfolgreich.
 
 Externe API-Fehler wie Timeouts werden gezielt behandelt und für User verständlich ausgegeben.
